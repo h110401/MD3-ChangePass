@@ -18,6 +18,7 @@ public class UserServiceIMPL implements IUserService {
     String SQL_CHECK_EMAIL = "select id from `users` where email = ?";
     String SQL_CHECK_USERNAME = "select id from `users` where username = ?";
     String SQL_CHECK_LOGIN = "select id, name, email from `users` where username = ? and password = ?";
+    String SQL_UPDATE = "update users set password = ? where id = ?";
 
     @Override
     public List<User> findAll() {
@@ -56,6 +57,17 @@ public class UserServiceIMPL implements IUserService {
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void update(User user) throws SQLException {
+        try (
+                PreparedStatement ps = connection.prepareStatement(SQL_UPDATE);
+        ) {
+            ps.setString(1, user.getPassword());
+            ps.setInt(2, user.getId());
+            ps.executeUpdate();
         }
     }
 

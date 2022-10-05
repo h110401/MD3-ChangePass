@@ -11,6 +11,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,10 +32,22 @@ public class UserServlet extends HttpServlet {
                 break;
             case "logout":
                 logout(request, response);
+                break;
+            case "change-pass":
+                formChangePass(request, response);
+                break;
             default:
-                request.getRequestDispatcher("/login/login.jsp").forward(request, response);
+                if (request.getSession().getAttribute("userLogin") != null) {
+                    request.getRequestDispatcher("/home/home.jsp").forward(request, response);
+                } else {
+                    request.getRequestDispatcher("/login/login.jsp").forward(request, response);
+                }
         }
 
+    }
+
+    private void formChangePass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.getRequestDispatcher("/home/changepass.jsp").forward(request, response);
     }
 
     private void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -63,9 +76,43 @@ public class UserServlet extends HttpServlet {
             case "login":
                 actionLogin(request, response);
                 break;
+            case "change-pass":
+                try {
+                    actionChangePass(request, response);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+                break;
             default:
                 System.out.println("default action");
         }
+    }
+
+    private void actionChangePass(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+        User userLogin = (User) request.getSession().getAttribute("userLogin");
+
+        String oldPass = request.getParameter("old-pass");
+        String newPass = request.getParameter("new-pass");
+        String repeatPass = request.getParameter("repeat-pass");
+
+        if (!newPass.equals(repeatPass)) {
+            request.setAttribute("message", "Repeat password not match");
+            request.getRequestDispatcher("home/changepass.jsp").forward(request, response);
+            return;
+        }
+
+        if (!userLogin.getPassword().equals(oldPass)) {
+            request.setAttribute("message", "Old password not match");
+            request.getRequestDispatcher("home/changepass.jsp").forward(request, response);
+            return;
+        }
+
+        userLogin.setPassword(newPass);
+        userService.update(userLogin);
+        request.getSession().setAttribute("userLogin", userLogin);
+
+        request.setAttribute("success", "Change password success");
+        request.getRequestDispatcher("home/home.jsp").forward(request, response);
     }
 
     private void actionLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

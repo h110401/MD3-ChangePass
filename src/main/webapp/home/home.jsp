@@ -13,15 +13,22 @@
 </head>
 <body>
 
+<c:if test="${requestScope['success'] != null}">
+    <p style="color: lightseagreen">${requestScope['success']}</p>
+</c:if>
 
 Hello ${sessionScope['userLogin'].name} <br>
 
-
+<a href="/userServlet?action=change-pass">
+    <button>Change pass</button>
+</a><br><br>
 <c:if test="${sessionScope['role'] == 'ADMIN' }">
     menu admin
 </c:if>
 
-<a href=""><button>logout</button></a>
+<a href="userServlet?action=logout">
+    <button>logout</button>
+</a>
 
 </body>
 </html>
